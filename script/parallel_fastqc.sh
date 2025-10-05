@@ -1,20 +1,24 @@
-#!/bin/bash 
+#!/bin/bash
+set -euo pipefail
 
-## PIPELINE VERSION
+# Usage: parallel_fastqc.sh <WDIR> <CPUS>
+WDIR=${1:-.}
+CPUS=${2:-4}
 
-WDIR=$1
-CPUS=$2
+OUTDIR="$WDIR/FastQC"
+mkdir -p "$OUTDIR"
 
-for i in *.fastq.gz
-do
-  while [ $(jobs | wc -l) -ge $CPUS ] ; do sleep 5; done
+shopt -s nullglob
+for i in *.fastq.gz; do
+  while [ "$(jobs -r | wc -l)" -ge "$CPUS" ]; do sleep 2; done
   echo "fastqc: Gathering sequencing metrics for sample $i"
-  echo "command: fastqc -q $i"
-  fastqc -q $i & 
-done 
-wait 
+  echo "command: fastqc -q -o \"$OUTDIR\" \"$i\""
+  fastqc -q -o "$OUTDIR" "$i" &
+done
+wait
+shopt -u nullglob
 
-rm *zip
-mv *html ../FastQC
+#echo "Running MultiQC on $OUTDIR"
+#multiqc -m fastqc "$OUTDIR" -o "$OUTDIR"
 
-echo "ALL FASTQC PROCESSING IS DONE!"
+echo "ALL FASTQC & MULTIQC PROCESSING IS DONE! Results in: $OUTDIR"
