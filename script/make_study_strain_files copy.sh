@@ -11,27 +11,13 @@ REF=$5
 
 FA=$TAG.fa
 
-STRAIN_DIR="$WDIR/study_strains/$TAG"
-
-# === Simple skip/rebuild policy ===
-# If $TAG directory exists AND is non-empty AND there are NO $TAG.prokka/ and $TAG.STAR/ subdirs,
-# we assume the strain is fully done -> skip.
-# Otherwise (dir missing OR has .prokka/.STAR leftovers), continue and (re)generate.
-if [[ -d "$STRAIN_DIR" ]]; then
-  if compgen -G "$STRAIN_DIR/*" > /dev/null \
-     && [[ ! -d "$WDIR/study_strains/$TAG.prokka" && ! -d "$WDIR/study_strains/$TAG.STAR" ]]; then
-    echo "==> $TAG seems DONE (found $STRAIN_DIR; no $TAG.prokka/ or $TAG.STAR/). Skipping."
-    exit 0
-  else
-    echo "==> Found $STRAIN_DIR; will (re)generate files for $TAG (prokka/STAR leftovers or empty dir)."
-    # 清理目标目录内的临时目录（若有）
-    rm -rf "$STRAIN_DIR/$TAG.prokka" "$STRAIN_DIR/$TAG.STAR" 2>/dev/null || true
-    # 清理顶层残留，表明上次未完成/中断
-    rm -rf "$WDIR/study_strains/$TAG.prokka" "$WDIR/study_strains/$TAG.STAR" 2>/dev/null || true
-  fi
-else
-  echo "==> Directory $STRAIN_DIR was not found and will be created."
-  mkdir -p "$STRAIN_DIR"
+if [[ -d "$WDIR/study_strains/$TAG" ]]
+then
+  echo "==> Found $WDIR/study_strains/$TAG! Will add files to the existing directory."
+  rm -rf $WDIR/study_strains/$TAG/*.STAR $WDIR/study_strains/$TAG/*.prokka 
+else 
+  echo "==> Directory $WDIR/study_strains/$TAG was not found and will be created." 
+  mkdir $WDIR/study_strains/$TAG
 fi
 
 if [[ $CPUS == "" ]]
